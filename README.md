@@ -23,6 +23,7 @@ CD into docker and run build.bat (Win) or build.sh (Linux)
 Afterwards you can minify by "npm run minify"
 
 ## History
+- 2024-04-20: Emscripten 3.1.57 changes
 - 2024-03-24: Bumped to 0.7.6
 - 2024-03-18: Bumped to 0.7.5 using Emscripten 3.1.56
 - 2024-03-13: Bumped to 0.7.4
