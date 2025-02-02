@@ -46,6 +46,8 @@ You can minify by "npm run minify"
 - v1/v2: [deskjet](https://github.com/deskjet)
 
 ## v3 History
+- 2025-02-02: libopenmpt 0.7.13 + Emscripten 4.0.2
+- 2025-02-02: Issue #1: Convert to AudioBuffer, see convert.html
 - 2024-06-15: libopenmpt 0.7.8 + Emscripten 3.1.61
 - 2024-05-12: libopenmpt 0.7.7 + Emscripten 3.1.59
 - 2024-04-20: Emscripten 3.1.57 changes

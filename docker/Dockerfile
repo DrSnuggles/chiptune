@@ -1,4 +1,4 @@
-# 3.1.61 works
+# 4.0.2 works
 # watch https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md
 FROM emscripten/emsdk:latest
 
