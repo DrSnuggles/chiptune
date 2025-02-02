@@ -75,6 +75,9 @@ export class ChiptuneJsPlayer {
 			case 'err':
 				this.fireEvent('onError', {type: msg.data.val})
 				break
+			case 'fullAudioData':
+				this.fireEvent('onFullAudioData', msg.data)
+				break
 			default:
 				console.log('Received unknown message',msg.data)
 		}
@@ -97,6 +100,7 @@ export class ChiptuneJsPlayer {
 	onError(handler) { this.addHandler('onError', handler) }
 	onMetadata(handler) { this.addHandler('onMetadata', handler) }
 	onProgress(handler) { this.addHandler('onProgress', handler) }
+	onFullAudioData(handler) { this.addHandler('onFullAudioData', handler) }
 
 	// methods
 	postMsg(cmd, val) {
@@ -124,4 +128,5 @@ export class ChiptuneJsPlayer {
 	// compatibility
 	seek(val) { this.setPos(val) }
 	getCurrentTime() { return this.currentTime }
+	decodeAll(ab) { this.postMsg('decodeAll', ab) }
 }

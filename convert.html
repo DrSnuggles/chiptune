@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Chiptune Worklet Demo</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<meta name="description" content="Chiptune Audio Converter"/>
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🔊</text></svg>"/>
+	<link href="./css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<main>
+	<section>
+		<fieldset>
+		<legend>Chiptune3 Drag'N'Drop converter</legend>
+		Sampling rate: <input id="destRate" value="48000"/> <small>8000-192000 kHz</small><br/>
+		Stereo separation: <input id="stereoSeparation" value="100"/> <small>0=Mono, 100=Amigaaaaa</small><br/>
+		Interpolation filter: <select>
+			<option value="0">internal default</option>
+			<option value="1">no interpolation (zero order hold)</option>
+			<option value="2">linear interpolation</option>
+			<option value="4">cubic interpolation</option>
+			<option value="8">windowed sinc with 8 taps</option>
+		</select><br/>
+		<hr/>
+		File type: <select id="mime"></select> <small>Used by recorder</small><br/>
+		audioBitrateMode: <select id="audioBitrateMode">
+			<option>variable</option>
+			<option>constant</option>
+		</select><br/>
+		audioBitsPerSecond: <input id="audioBitsPerSecond" value="128000"/> <small>Bitrate for compressed audio</small><br/>
+		<hr/>
+
+		<button id="demoButton">Convert a demo song</button><br/>
+		Status: <span id="stat"></span>
+		</fieldset>
+		<fieldset id="outSongs">
+			<legend>Converted songs</legend>
+		</fieldset>
+	</section>
+
+	<!-- for audio playback policy -->
+	<div id="audioModal">👉 💻 👂 🎶</div>
+</main>
+
+<script type="module">
+	import {dnd} from './dnd.js'
+	import {ChiptuneJsPlayer} from './chiptune3.js'
+
+	// stupid no audio till user interaction policy thingy
+	function userInteracted() {
+		removeEventListener('keydown', userInteracted)
+		removeEventListener('click', userInteracted)
+		removeEventListener('touchstart', userInteracted)
+		audioModal.classList.add('fadeOut')
+
+		// enable Drag'N'Drop
+		dnd(window, (ab) => { convert(ab) })
+
+		// fill in available recorder mime types
+		// https://stackoverflow.com/questions/41739837/all-mime-types-supported-by-mediarecorder-in-firefox-and-chrome
+		const containers = ['webm', 'ogg', 'mp4', 'x-matroska', '3gpp', '3gpp2', '3gp2', 'quicktime', 'mpeg', 'aac', 'flac', 'wav']
+		const codecs = ['vp9', 'vp8', 'avc1', 'av1', 'h265', 'h.265', 'h264', 'h.264', 'opus', 'pcm', 'aac', 'mpeg', 'mp4a']
+		const supportedAudios = containers.map(format => `audio/${format}`)
+  			.filter(mimeType => MediaRecorder.isTypeSupported(mimeType))
+		const supportedAudioCodecs = supportedAudios.flatMap(audio => 
+			codecs.map(codec => `${audio};codecs=${codec}`))
+      			.filter(mimeType => MediaRecorder.isTypeSupported(mimeType))
+		const supportedVideos = containers.map(format => `video/${format}`)
+			.filter(mimeType => MediaRecorder.isTypeSupported(mimeType))
+		const supportedVideoCodecs = supportedVideos.flatMap(video => 
+			codecs.map(codec => `${video};codecs=${codec}`))
+				.filter(mimeType => MediaRecorder.isTypeSupported(mimeType))
+		// add to SELECT
+		const html = []
+		for (let i = 0; i < supportedAudioCodecs.length; i++) {
+			html.push('<option>',supportedAudioCodecs[i],'</option>')
+		}
+		mime.insertAdjacentHTML('beforeEnd', html.join(''))
+	}
+	addEventListener('keydown', userInteracted)
+	addEventListener('click', userInteracted)
+	addEventListener('touchstart', userInteracted)
+
+	demoButton.addEventListener('click', ()=>{
+		log('Loading...')
+		fetch('https://deskjet.github.io/chiptune2.js/tunes/chipsounds.mod')
+		.then(res => res.arrayBuffer())
+		.then(ab => {
+			log(ab.byteLength+' bytes loaded')
+			convert(ab)
+		})
+	})
+
+	function log(txt) {
+		stat.insertAdjacentHTML('beforeEnd', '<div>'+txt+'</div>')
+	}
+	function convert(ab) {
+		// we cannot use an offline audio context since we do not know the length yet
+		// but we can set a specific samplerate
+		const ctx = new AudioContext({sampleRate: destRate.value*1})
+		log('Audio context with sampleRate '+ ctx.sampleRate +' created')
+
+		// init chiptune
+		window.chiptune = new ChiptuneJsPlayer({
+			repeatCount:			0,							// -1 = play endless (default), 0 = play once, do not repeat
+			stereoSeparation:		stereoSeparation.value*1,	// percents
+			interpolationFilter:	0,							// https://lib.openmpt.org/doc/group__openmpt__module__render__param.html
+			context:				ctx,
+		})
+		// listen ready event
+		chiptune.onInitialized(() => {
+			log('Decoding...')
+			chiptune.decodeAll(ab)
+		})
+		chiptune.onError((err) => {
+			log('Song error')
+		})
+		chiptune.onFullAudioData((o) => {
+			log('Audio decoded')
+			// convert to an audio buffer
+			/*
+			const aBuf = new AudioBuffer({
+				length: o.data[0].length,
+				numberOfChannels: o.data.length,
+				sampleRate: ctx.sampleRate
+			})
+			*/
+			const aBuf = ctx.createBuffer(o.data.length, o.data[0].length, ctx.sampleRate)
+			aBuf.getChannelData(0).set( o.data[0] )
+			aBuf.getChannelData(1).set( o.data[1] )
+
+			// the goal of issue#1 was to decode to AudioBuffer
+			console.log(aBuf)
+
+			// create a source node for recording
+			const source = ctx.createBufferSource()
+			source.buffer = aBuf
+			source.playbackRate.value = 1
+			source.loop = false
+			source.onended = ()=>{
+				log('source ended')
+				rec.requestData()
+				rec.stop()
+			}
+			const streamNode = ctx.createMediaStreamDestination()
+		
+			// send stream to MediaRecorder
+			const chunks = []
+			source.connect(streamNode)
+			source.connect(ctx.destination)
+			const rec = new MediaRecorder(streamNode.stream, {
+				audioBitsPerSecond: audioBitsPerSecond.value,
+				audioBitrateMode: audioBitrateMode.value,
+				mimeType: mime.value
+			})
+			rec.start()
+			source.start(0)
+			log('Playing back while recording...')
+			
+			rec.ondataavailable = (evt) => {
+				// push each chunk (blobs) in an array
+				chunks.push(evt.data)
+				log('Chunk recorded')
+			}
+
+			rec.onstop = (evt) => {
+				log('Recorder stopped')
+				// insert into HTML
+				const blob = new Blob(chunks, { type: mime.value })
+				const aHTML = new Audio()
+				aHTML.controls = true
+				aHTML.volume = 0.5
+				//aHTML.srcObject = streamNode.stream
+				aHTML.src = URL.createObjectURL(blob)
+				aHTML.title = o.meta.title	// chromium only?
+				outSongs.appendChild(aHTML)
+				aHTML.play()
+				log('Playing back from AUDIO element')
+			}
+
+		})
+	}
+
+</script>
+</body>
+</html>
