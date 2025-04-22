@@ -1,4 +1,4 @@
-# 4.0.2 works
+# 4.0.7 works
 # watch https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md
 FROM emscripten/emsdk:latest
 
@@ -17,7 +17,8 @@ RUN mkdir libopenmpt && tar xzvf $FILE.makefile.tar.gz -C ./libopenmpt --strip-c
 WORKDIR /src/libopenmpt
 
 # next line updates EXPORTED_FUNCTIONS and since 3.1.57 DEFAULT_LIBRARY_FUNCS_TO_INCLUDE
-RUN sed -i "s/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free'\]\"/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free','stackAlloc','stackSave','stackRestore','UTF8ToString'\]\" -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=\"['stackAlloc','stackSave','stackRestore']\"/g" build/make/config-emscripten.mk
+# 4.0.7 no HEAP8,HEAPU32 export by default
+RUN sed -i "s/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free'\]\"/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free','stackAlloc','stackSave','stackRestore','UTF8ToString','HEAP8','HEAPU32'\]\" -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=\"['stackAlloc','stackSave','stackRestore']\"/g" build/make/config-emscripten.mk
 
 # build
 RUN make CONFIG=emscripten EMSCRIPTEN_TARGET=audioworkletprocessor
