@@ -92,6 +92,8 @@ window.nextSong = (url) => {
 	const parts = url.split('/')
 	document.getElementById('modfilename').innerText = parts[parts.length-1]
 
+	url = url.replaceAll("#", "%23") // Workaround for files with "#" in name that fail to fetch
+
 	isLoading = true
 	LDR.loadURL(url, (o)=>{
 		if (!o.dat) return // not yet ready (damn, i need a 2nd callback both in one is not nice)
