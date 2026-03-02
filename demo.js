@@ -92,8 +92,15 @@ window.nextSong = (url) => {
 	const parts = url.split('/')
 	document.getElementById('modfilename').innerText = parts[parts.length-1]
 
+	url = url.replaceAll('#','%23').replaceAll('&amp;','&')
+
 	isLoading = true
 	LDR.loadURL(url, (o)=>{
+		if (!o) {
+			console.log('Error loading:', url)
+			isLoading = false
+			return
+		}
 		if (!o.dat) return // not yet ready (damn, i need a 2nd callback both in one is not nice)
 		const buffer = o.dat
 
