@@ -42,3 +42,41 @@ export const crypto = {
 		}
 	}
 }
+
+export const TextDecoder = {
+	// from older libopenmpt version
+	decode: (heapOrArray) => {
+		let str = ''
+		let idx = 0
+		const endPtr = heapOrArray.length
+		while (idx < endPtr) {
+			// For UTF8 byte structure, see:
+			// http://en.wikipedia.org/wiki/UTF-8#Description
+			// https://www.ietf.org/rfc/rfc2279.txt
+			// https://tools.ietf.org/html/rfc3629
+			let u0 = heapOrArray[idx++]
+			if (!(u0 & 128)) {
+				str += String.fromCharCode(u0)
+				continue
+			}
+			const u1 = heapOrArray[idx++] & 63
+			if ((u0 & 224) == 192) {
+				str += String.fromCharCode(((u0 & 31) << 6) | u1)
+				continue
+			}
+			const u2 = heapOrArray[idx++] & 63
+			if ((u0 & 240) == 224) {
+				u0 = ((u0 & 15) << 12) | (u1 << 6) | u2
+			} else {
+				u0 = ((u0 & 7) << 18) | (u1 << 12) | (u2 << 6) | (heapOrArray[idx++] & 63)
+			}
+			if (u0 < 65536) {
+				str += String.fromCharCode(u0)
+			} else {
+				const ch = u0 - 65536
+				str += String.fromCharCode(55296 | (ch >> 10), 56320 | (ch & 1023))
+			}
+		}
+		return str
+	}
+}

@@ -1,13 +1,16 @@
 # Chiptune.js
 
+## Important
+Latest released and beta versions are available via "npm i chiptune".
+
+https://www.npmjs.com/package/chiptune3
+
 ## Info
 This is a javascript library that can play module music files. It is based on the [libopenmpt](https://lib.openmpt.org/libopenmpt) C/C++ library. To translate libopenmpt into Javascript [emscripten](https://github.com/kripken/emscripten) was used. 
 
 Modernized ES6 module version with libopenmpt AudioWorklet backend
 
 **Please note**: The compiled `libopenmpt.worklet.js` in this repository is maybe outdated.
-
-Latest released and beta versions are available via "npm i chiptune".
 
 ## Demo
 See: https://DrSnuggles.github.io/chiptune
@@ -46,6 +49,7 @@ You can minify by "npm run minify"
 - v1/v2: [deskjet](https://github.com/deskjet)
 
 ## v3 History
+- 2026-04-20: libopenmpt 0.8.6 + Emscripten 5.0.6
 - 2025-04-22: Emscripten 4.0.7
 - 2025-02-02: libopenmpt 0.7.13 + Emscripten 4.0.2
 - 2025-02-02: Issue #1: Convert to AudioBuffer, see convert.html
