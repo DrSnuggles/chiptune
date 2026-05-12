@@ -121,6 +121,11 @@ export class ChiptuneJsPlayer {
 	setRepeatCount(val) { this.postMsg('repeatCount', val) }
 	setPitch(val) { this.postMsg('setPitch', val) }
 	setTempo(val) { this.postMsg('setTempo', val) }
+	// Live-update the stereo-separation render param (0..200 percent;
+	// 100 = libopenmpt default, 0 = mono). Also mutates the worklet's
+	// this.config.stereoSeparation so subsequently-loaded modules
+	// inherit the value without a reload.
+	setStereoSeparation(val) { this.postMsg('setStereoSeparation', val) }
 	setPos(val) { this.postMsg('setPos', val) }
 	setOrderRow(o,r) { this.postMsg('setOrderRow', {o:o,r:r}) }
 	setVol(val) { this.gain.gain.value = val }
