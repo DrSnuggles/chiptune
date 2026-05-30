@@ -131,6 +131,13 @@ class MPT extends AudioWorkletProcessor {
 				if (!this.modulePtr) return
 				libopenmpt._openmpt_module_set_repeat_count(this.modulePtr, this.config.repeatCount)
 				break
+			case 'setCtl':
+				if (!libopenmpt.stackSave || !this.modulePtr) return
+				const stack = libopenmpt.stackSave()
+				libopenmpt._openmpt_module_ctl_set(this.modulePtr, asciiToStack(v.name), asciiToStack(v.val))
+				libopenmpt.stackRestore(stack)
+				break
+			/*
 			case 'setPitch':
 				if (!libopenmpt.stackSave || !this.modulePtr) return
 				libopenmpt._openmpt_module_ctl_set(this.modulePtr, asciiToStack('play.pitch_factor'), asciiToStack(v.toString()))
@@ -139,23 +146,13 @@ class MPT extends AudioWorkletProcessor {
 				if (!libopenmpt.stackSave || !this.modulePtr) return
 				libopenmpt._openmpt_module_ctl_set(this.modulePtr, asciiToStack('play.tempo_factor'), asciiToStack(v.toString()))
 				break
-			case 'setCtl':
-				if (!libopenmpt.stackSave || !this.modulePtr) return
-				{
-					const stack = libopenmpt.stackSave()
-					libopenmpt._openmpt_module_ctl_set(this.modulePtr, asciiToStack(v.name), asciiToStack(v.value))
-					libopenmpt.stackRestore(stack)
-				}
-				break
-			case 'setStereoSeparation': {
-				// Clamp to [0, 200] (libopenmpt's documented range) and
-				// fall back to the default 100 on non-finite values.
-				const n = Number.isFinite(v) ? Math.max(0, Math.min(200, Math.trunc(v))) : 100
+			*/
+			case 'setStereoSeparation':
+				if (!this.modulePtr) return
+				const n = Number.isFinite(v) ? Math.max(0, Math.min(200, Math.trunc(v))) : 100	// Clamp to [0, 200] (libopenmpt's documented range) and fall back to the default 100 on non-finite values
 				this.config.stereoSeparation = n
-				if (!this.modulePtr) break
 				libopenmpt._openmpt_module_set_render_param(this.modulePtr, OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT, n)
 				break
-			}
 			case 'selectSubsong':
 				if (!this.modulePtr) return
 				libopenmpt._openmpt_module_select_subsong(this.modulePtr, v)

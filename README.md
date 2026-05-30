@@ -49,6 +49,8 @@ You can minify by "npm run minify"
 - v1/v2: [deskjet](https://github.com/deskjet)
 
 ## v3 History
+- 2026-05-30: setSteroSeparation + setCtl (PR: indigo423 from CoolModFiles.com)
+- 2026-05-29: libopenmpt 0.8.7 + Emscripten 5.0.7
 - 2026-04-20: libopenmpt 0.8.6 + Emscripten 5.0.6
 - 2025-04-22: Emscripten 4.0.7
 - 2025-02-02: libopenmpt 0.7.13 + Emscripten 4.0.2
@@ -70,7 +72,7 @@ All code in this project is MIT (X11) licensed. The only exception are the compi
 
 License text below:
 
->Copyright © 2013-2024 The chiptune2.js/chiptune3.js contributers.
+>Copyright © 2013-2026 The chiptune2.js/chiptune3.js contributers.
 >
 >Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >

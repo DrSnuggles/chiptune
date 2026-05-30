@@ -83,6 +83,10 @@ chiptune.onInitialized(() => {
 					<td>chiptune.setTempo(float)</td>
 					<td><input oninput="chiptune.setTempo(this.value)" type="range" min="0" max="2" step="0.0001"/></td>
 				</tr>
+				<tr>
+					<td>chiptune.setStereoSeparation(int)</td>
+					<td><input oninput="chiptune.setStereoSeparation(this.value)" type="range" min="0" max="200" step="1" value="100"/></td>
+				</tr>
 			</table>
 			</fieldset>
 		</section>
