@@ -139,6 +139,14 @@ class MPT extends AudioWorkletProcessor {
 				if (!libopenmpt.stackSave || !this.modulePtr) return
 				libopenmpt._openmpt_module_ctl_set(this.modulePtr, asciiToStack('play.tempo_factor'), asciiToStack(v.toString()))
 				break
+			case 'setCtl':
+				if (!libopenmpt.stackSave || !this.modulePtr) return
+				{
+					const stack = libopenmpt.stackSave()
+					libopenmpt._openmpt_module_ctl_set(this.modulePtr, asciiToStack(v.name), asciiToStack(v.value))
+					libopenmpt.stackRestore(stack)
+				}
+				break
 			case 'setStereoSeparation': {
 				// Clamp to [0, 200] (libopenmpt's documented range) and
 				// fall back to the default 100 on non-finite values.
