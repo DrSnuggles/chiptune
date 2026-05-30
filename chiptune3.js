@@ -128,6 +128,11 @@ export class ChiptuneJsPlayer {
 	// Both name and value are string-encoded the same way libopenmpt's
 	// own ctl interface expects them.
 	setCtl(name, value) { this.postMsg('setCtl', { name, value }) }
+	// Live-update the stereo-separation render param (0..200 percent;
+	// 100 = libopenmpt default, 0 = mono). Also mutates the worklet's
+	// this.config.stereoSeparation so subsequently-loaded modules
+	// inherit the value without a reload.
+	setStereoSeparation(val) { this.postMsg('setStereoSeparation', val) }
 	setPos(val) { this.postMsg('setPos', val) }
 	setOrderRow(o,r) { this.postMsg('setOrderRow', {o:o,r:r}) }
 	setVol(val) { this.gain.gain.value = val }
