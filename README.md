@@ -49,6 +49,7 @@ You can minify by "npm run minify"
 - v1/v2: [deskjet](https://github.com/deskjet)
 
 ## v3 History
+- 2026-06-05: libopenmpt 0.8.7 + Emscripten 6.0.0
 - 2026-05-30: setSteroSeparation + setCtl (PR: indigo423 from CoolModFiles.com)
 - 2026-05-29: libopenmpt 0.8.7 + Emscripten 5.0.7
 - 2026-04-20: libopenmpt 0.8.6 + Emscripten 5.0.6

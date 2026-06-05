@@ -1,7 +1,6 @@
 # watch https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md
 #FROM emscripten/emsdk:latest
-FROM emscripten/emsdk:5.0.7
-
+FROM emscripten/emsdk:6.0.0
 
 ARG BASE
 ARG FILE
