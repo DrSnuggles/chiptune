@@ -7,6 +7,12 @@ import libopenmptPromise from './libopenmpt.worklet.js'
 // consts
 const OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT = 2
 const OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH = 3
+// libopenmpt_ext "interactive" interface: a struct of 16 C function pointers
+// (see libopenmpt_ext.h). Entries 10/11 are set/get_channel_mute_status.
+// Calling them needs the wasm function table (HEAP32 + wasmTable exports).
+const OPENMPT_MODULE_EXT_INTERFACE_INTERACTIVE_SIZE = 16 * 4
+const INTERACTIVE_SET_CHANNEL_MUTE_STATUS = 10 * 4
+const INTERACTIVE_GET_CHANNEL_MUTE_STATUS = 11 * 4
 
 // vars
 let libopenmpt
@@ -166,16 +172,13 @@ class MPT extends AudioWorkletProcessor {
 				if (!this.modulePtr) return
 				libopenmpt._openmpt_module_set_position_order_row(this.modulePtr, v.o, v.r)
 				break
-			/*
-			case 'toggleMute'
-				// openmpt_module_ext_get_interface(mod_ext, interface_id, interface, interface_size)
-				// openmpt_module_ext_interface_interactive
-				// set_channel_mute_status
-				// https://lib.openmpt.org/doc/group__libopenmpt__ext__c.html#ga0275a35da407cd092232a20d3535c9e4
-				if (!this.modulePtr) return
-				//const extPtr = libopenmpt.openmpt_module_ext_get_interface(mod_ext, interface_id, interface, interface_size)
+			case 'setChannelMute':
+				this.setChannelMute(v.ch, v.mute)
 				break
-			*/
+			case 'toggleMute':
+				if (!this.getChannelMuteStatus) return this.setChannelMute(v, true)	// warns
+				this.setChannelMute(v, !this.getChannelMuteStatus(this.modExtPtr, v))
+				break
 			case 'decodeAll':
 				this.decodeAll(v)
 				break
@@ -215,7 +218,9 @@ class MPT extends AudioWorkletProcessor {
 		const byteArray = new Int8Array(buffer)
 		const ptrToFile = libopenmpt._malloc(byteArray.byteLength)
 		libopenmpt.HEAPU8.set(byteArray, ptrToFile)
-		this.modulePtr = libopenmpt._openmpt_module_create_from_memory(ptrToFile, byteArray.byteLength, 0, 0, 0)
+		// openmpt_module_ext gives us the interactive interface (channel mute); the plain module handle comes from it
+		this.modExtPtr = libopenmpt._openmpt_module_ext_create_from_memory(ptrToFile, byteArray.byteLength, 0, 0, 0, 0, 0, 0, 0)
+		this.modulePtr = this.modExtPtr ? libopenmpt._openmpt_module_ext_get_module(this.modExtPtr) : 0
 
 		if(this.modulePtr === 0) {
 			// could not create module
@@ -236,6 +241,8 @@ class MPT extends AudioWorkletProcessor {
 		this.leftPtr = libopenmpt._malloc(4 * maxFramesPerChunk)	// 4x = float
 		this.rightPtr = libopenmpt._malloc(4 * maxFramesPerChunk)
 
+		this.initInteractive()
+
 		// set config options on module
 		libopenmpt._openmpt_module_set_repeat_count(this.modulePtr, this.config.repeatCount)
 		libopenmpt._openmpt_module_set_render_param(this.modulePtr, OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT, this.config.stereoSeparation)
@@ -246,6 +253,16 @@ class MPT extends AudioWorkletProcessor {
 	}
 	stop() {
 		if (!this.modulePtr) return
+		if (this.interactivePtr) {
+			libopenmpt._free(this.interactivePtr)
+			this.interactivePtr = 0
+		}
+		this.setChannelMuteStatus = this.getChannelMuteStatus = null
+		if (this.modExtPtr) {
+			libopenmpt._openmpt_module_ext_destroy(this.modExtPtr)	// also destroys the module handle
+			this.modExtPtr = 0
+			this.modulePtr = 0
+		}
 		if (this.modulePtr != 0) {
 			libopenmpt._openmpt_module_destroy(this.modulePtr)
 			this.modulePtr = 0
@@ -260,6 +277,32 @@ class MPT extends AudioWorkletProcessor {
 		}
 		this.channels = 0
 	}
+	// Resolve set/get_channel_mute_status from the ext module's interactive interface.
+	// Needs a libopenmpt build that exports HEAP32 + wasmTable (see docker/Dockerfile);
+	// on older builds mute is simply unavailable and setChannelMute warns once.
+	initInteractive() {
+		this.setChannelMuteStatus = this.getChannelMuteStatus = null
+		if (!this.modExtPtr || !libopenmpt.wasmTable || !libopenmpt.HEAP32 || !libopenmpt.stackSave) return
+		this.interactivePtr = libopenmpt._malloc(OPENMPT_MODULE_EXT_INTERFACE_INTERACTIVE_SIZE)
+		const stack = libopenmpt.stackSave()
+		const ok = libopenmpt._openmpt_module_ext_get_interface(this.modExtPtr, asciiToStack('interactive'), this.interactivePtr, OPENMPT_MODULE_EXT_INTERFACE_INTERACTIVE_SIZE)
+		libopenmpt.stackRestore(stack)
+		if (!ok) return
+		const fn = offset => libopenmpt.wasmTable.get(libopenmpt.HEAP32[(this.interactivePtr + offset) >> 2])
+		this.setChannelMuteStatus = fn(INTERACTIVE_SET_CHANNEL_MUTE_STATUS)
+		this.getChannelMuteStatus = fn(INTERACTIVE_GET_CHANNEL_MUTE_STATUS)
+	}
+	setChannelMute(ch, mute) {
+		if (!this.modulePtr) return
+		if (!this.setChannelMuteStatus) {
+			if (!this.warnedMute) console.warn('chiptune3: channel mute needs a libopenmpt build that exports HEAP32 + wasmTable')
+			this.warnedMute = true
+			return
+		}
+		this.setChannelMuteStatus(this.modExtPtr, ch, mute ? 1 : 0)
+		this.port.postMessage({cmd:'channelMute', val:{ch:ch, mute:!!this.getChannelMuteStatus(this.modExtPtr, ch)}})
+	}
+
 	meta() {
 		this.port.postMessage({cmd: 'meta', meta: this.getMeta()})
 	}

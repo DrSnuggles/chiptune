@@ -18,7 +18,8 @@ WORKDIR /src/libopenmpt
 
 # next line updates EXPORTED_FUNCTIONS and since 3.1.57 DEFAULT_LIBRARY_FUNCS_TO_INCLUDE
 # 4.0.7 no HEAPxxx export by default
-RUN sed -i "s/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free'\]\"/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free','stackAlloc','stackSave','stackRestore','UTF8ToString'\]\" -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=\"\['stackAlloc','stackSave','stackRestore'\]\" -s EXPORTED_RUNTIME_METHODS=\"\['HEAP8','HEAPU8','HEAPF32'\]\"/g" build/make/config-emscripten.mk
+# HEAP32 + wasmTable: needed to call libopenmpt_ext interface function pointers (channel mute)
+RUN sed -i "s/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free'\]\"/SO_LDFLAGS += -s EXPORTED_FUNCTIONS=\"\['_malloc','_free','stackAlloc','stackSave','stackRestore','UTF8ToString'\]\" -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=\"\['stackAlloc','stackSave','stackRestore'\]\" -s EXPORTED_RUNTIME_METHODS=\"\['HEAP8','HEAPU8','HEAP32','HEAPF32','wasmTable'\]\"/g" build/make/config-emscripten.mk
 
 # build
 RUN make CONFIG=emscripten EMSCRIPTEN_TARGET=audioworkletprocessor
