@@ -87,6 +87,10 @@ chiptune.onInitialized(() => {
 					<td>chiptune.setStereoSeparation(int)</td>
 					<td><input oninput="chiptune.setStereoSeparation(this.value)" type="range" min="0" max="200" step="1" value="100"/></td>
 				</tr>
+				<tr>
+					<td>chiptune.toggleMute(int)</td>
+					<td><input id="muteCh" type="number" min="0" max="63" step="1" value="0" style="width:4em"/> <button type="button" onclick="chiptune.toggleMute(document.getElementById('muteCh').value)">toggle channel</button></td>
+				</tr>
 			</table>
 			</fieldset>
 		</section>
@@ -98,6 +102,7 @@ chiptune.onInitialized(() => {
 			chiptune.onEnded = () => {}<br/>
 			chiptune.onError = (err) => {}<br/>
 			chiptune.onMetadata = (meta) => {}<br/>
+			chiptune.onChannelMute = ({ch, mute}) => {}<br/>
 			chiptune.onProgress = (pos) => {}
 			</fieldset>
 		</section>

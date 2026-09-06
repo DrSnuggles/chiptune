@@ -34,6 +34,7 @@ Drop in your favorite songs.
 * Module metadata
 * Looping mode
 * Volume control
+* Per-channel mute (setChannelMute / toggleMute)
 * Position control
 * Pattern data
 
@@ -49,6 +50,7 @@ You can minify by "npm run minify"
 - v1/v2: [deskjet](https://github.com/deskjet)
 
 ## v3 History
+- 2026-09-06: per-channel mute via libopenmpt_ext interactive interface; build now exports HEAP32 + wasmTable (PR: LumenPrima)
 - 2026-06-05: libopenmpt 0.8.7 + Emscripten 6.0.0
 - 2026-05-30: setSteroSeparation + setCtl (PR: indigo423 from CoolModFiles.com)
 - 2026-05-29: libopenmpt 0.8.7 + Emscripten 5.0.7

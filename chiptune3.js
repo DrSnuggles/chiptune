@@ -78,6 +78,9 @@ export class ChiptuneJsPlayer {
 			case 'fullAudioData':
 				this.fireEvent('onFullAudioData', msg.data)
 				break
+			case 'channelMute':
+				this.fireEvent('onChannelMute', msg.data.val)			// {ch, mute} as libopenmpt reports it
+				break
 			default:
 				console.log('Received unknown message',msg.data)
 		}
@@ -101,6 +104,7 @@ export class ChiptuneJsPlayer {
 	onMetadata(handler) { this.addHandler('onMetadata', handler) }
 	onProgress(handler) { this.addHandler('onProgress', handler) }
 	onFullAudioData(handler) { this.addHandler('onFullAudioData', handler) }
+	onChannelMute(handler) { this.addHandler('onChannelMute', handler) }
 
 	// methods
 	postMsg(cmd, val) {
@@ -125,6 +129,8 @@ export class ChiptuneJsPlayer {
 	setPitch(val) { this.postMsg('setCtl', {name:'play.pitch_factor', val:val}) }
 	setTempo(val) { this.postMsg('setCtl', {name:'play.tempo_factor', val:val}) }
 	setStereoSeparation(val) { this.postMsg('setStereoSeparation', val*1) }		// 0..200 default=100
+	setChannelMute(ch, mute) { this.postMsg('setChannelMute', {ch:ch*1, mute:!!mute}) }	// per-channel mute (resets on load)
+	toggleMute(ch) { this.postMsg('toggleMute', ch*1) }
 	setPos(val) { this.postMsg('setPos', val) }
 	setOrderRow(o,r) { this.postMsg('setOrderRow', {o:o,r:r}) }
 	setVol(val) { this.gain.gain.value = val }
